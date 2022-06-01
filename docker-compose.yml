@@ -9,13 +9,13 @@ services:
       context: .
       dockerfile: src/Dockerfile
     environment:
-      - TOKEN=2057091218:AAG4dtsDK-THlBjpD2CruAd-LhQIWbBnjx0
-      - HOST=0.0.0.0
+      - TOKEN=
+      - HOST=127.0.0.1
       - PORT=3306
-      - USER=richardhere
-      - PASSWORD=14112002Rich
+      - USER=
+      - PASSWORD=
       - DBNAME=queue_db
-      - ADMIN_PASSWORD=qwerty
+      - ADMIN_PASSWORD=
     depends_on:
       - bot-db
     networks:
@@ -25,8 +25,8 @@ services:
     image: mysql/mysql-server
     restart: always
     environment:
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=14112002Rich
+      - MYSQL_USER=
+      - MYSQL_PASSWORD=
     ports:
       - "3307:3306"
     networks:
