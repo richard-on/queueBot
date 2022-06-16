@@ -1,0 +1,34 @@
+version: "3.5"
+networks:
+  bot:
+    name: bot
+
+services:
+  db:
+    container_name: "db"
+    networks:
+      - bot
+    image: mysql:latest
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysqlpw
+    ports:
+      - "3307:3306"
+
+  bot:
+    container_name: "bot"
+    depends_on:
+      - db
+    networks:
+      - bot
+    build:
+      context: ..
+      dockerfile: ./cmd/queueBot/Dockerfile
+    environment:
+      - TOKEN=2057091218:AAG4dtsDK-THlBjpD2CruAd-LhQIWbBnjx0
+      - HOST=db
+      - PORT=3306
+      - USER=root
+      - PASSWORD=mysqlpw
+      - DBNAME=queue_db
+      - ADMIN_PASSWORD=qwerty
