@@ -94,9 +94,15 @@ func JoinQueue(subjectId int64, queueId int64, userId int64) error {
 	defer db.Close()
 
 	res, err := db.Query("SELECT * FROM queue WHERE queue_id = ? AND user_id = ?;", queueId, userId)
+	if err != nil {
+		return err
+	}
 	var position int
 	if !res.Next() {
 		res, err = db.Query("SELECT MAX(position) FROM queue WHERE queue_id = ?;", queueId)
+		if err != nil {
+			return err
+		}
 		if res.Next() {
 			err := res.Scan(&position)
 			if err != nil {
@@ -122,6 +128,9 @@ func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
 	defer db.Close()
 
 	res, err := db.Query("SELECT * FROM queue WHERE queue_id = ? AND user_id = ?;", queueId, userId)
+	if err != nil {
+		return err
+	}
 	if res.Next() {
 		_, err = db.Exec("DELETE FROM queue WHERE subject_id = ? AND queue_id = ? AND user_id = ?", subjectId, queueId, userId)
 		if err != nil {
@@ -146,6 +155,9 @@ func PrintQueue(queueId int64, userId int64) (string, error) {
 	sb.WriteString("Current queue is:\n")
 	flag := false
 	res, err := db.Query("SELECT u.username, u.first_name, u.last_name, position FROM queue JOIN users u ON u.user_id = queue.user_id WHERE queue_id = ? ORDER BY position;", queueId)
+	if err != nil {
+		return "", err
+	}
 	for res.Next() {
 		err = res.Scan(&queuePrint.Username, &queuePrint.FirstName, &queuePrint.LastName, &queuePrint.Position)
 		if err != nil {

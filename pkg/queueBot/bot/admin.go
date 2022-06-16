@@ -16,24 +16,24 @@ func handleAdmin(update tgbotapi.Update, msg tgbotapi.MessageConfig, args []stri
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Added subject "+args[2])
 
 	case "rm_subject":
-		err := db.RmSubject(args[1], args[2])
-		if err != nil {
+		if err := db.RmSubject(args[1], args[2]); err != nil {
 			return msg, err
 		}
+
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Removed subject "+args[2])
 
 	case "add_queue":
-		err := db.AddQueue(args[1], args[2], args[3])
-		if err != nil {
+		if err := db.AddQueue(args[1], args[2], args[3]); err != nil {
 			return msg, err
 		}
+
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Added queue "+args[2])
 
 	case "rm_queue":
-		err := db.RmQueue(args[1], args[2], args[3])
-		if err != nil {
+		if err := db.RmQueue(args[1], args[2], args[3]); err != nil {
 			return msg, err
 		}
+
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Removed queue "+args[2])
 
 	case "exit":

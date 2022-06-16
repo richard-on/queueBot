@@ -17,7 +17,10 @@ func CheckAdmin(ID int64, username string) bool {
 		return false
 	}
 	if res.Next() {
-		_, err = db.Exec("INSERT INTO admins(is_logged) VALUES(1);")
+		if _, err = db.Exec("INSERT INTO admins(is_logged) VALUES(1);"); err != nil {
+			return false
+		}
+
 		return true
 	}
 
@@ -32,6 +35,9 @@ func AddSubject(alias string, name string, schedule string) error {
 	defer db.Close()
 
 	res, err := db.Query("SELECT * FROM subjects WHERE alias = ? OR name = ?;", alias, name)
+	if err != nil {
+		return err
+	}
 	if !res.Next() {
 		if _, err = db.Exec("INSERT INTO subjects(subject_id, alias, name, schedule) VALUES(?, ?, ?, 'WEEKLY');", nil, alias, name); err != nil {
 			return err
@@ -67,14 +73,19 @@ func AddQueue(subjectAlias string, queueName string, queueDate string) error {
 
 	var subjectId int64
 	res, err := db.Query("SELECT subject_id FROM subjects WHERE alias = ?;", subjectAlias)
+	if err != nil {
+		return err
+	}
 	for res.Next() {
-		err = res.Scan(&subjectId)
-		if err != nil {
+		if err = res.Scan(&subjectId); err != nil {
 			return errors.New("this subject does not exist")
 		}
 	}
 
 	res, err = db.Query("SELECT * FROM queues_list WHERE subject_id = ? AND name = ?;", subjectId, queueName)
+	if err != nil {
+		return err
+	}
 	if res.Next() {
 		return errors.New("this queue already exists")
 	} else {

@@ -22,7 +22,7 @@ services:
     networks:
       - bot
     build:
-      context: ..
+      context: .
       dockerfile: ./cmd/queueBot/Dockerfile
     image: queuebot
     environment:
