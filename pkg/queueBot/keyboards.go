@@ -1,17 +1,17 @@
-package bot
+package queueBot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var commandKeyboard = tgbotapi.NewReplyKeyboard(
+var CommandKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
 		tgbotapi.NewKeyboardButton("/admin"),
 		tgbotapi.NewKeyboardButton("/subjects"),
 	),
 )
 
-var queueActionKeyboard = tgbotapi.NewReplyKeyboard(
+var QueueActionKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
 		tgbotapi.NewKeyboardButton("Enter"),
 		tgbotapi.NewKeyboardButton("Leave"),
@@ -21,7 +21,7 @@ var queueActionKeyboard = tgbotapi.NewReplyKeyboard(
 	),
 )
 
-func createSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
+func CreateSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
 	var subjectRows [][]tgbotapi.KeyboardButton
 	var subjectRow []tgbotapi.KeyboardButton
 	var subjectButtons []tgbotapi.KeyboardButton
@@ -41,7 +41,7 @@ func createSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
 	return subjectNewKeyboard
 }
 
-func createQueueReplyKeyboard(data []QueueInfo) tgbotapi.ReplyKeyboardMarkup {
+func CreateQueueReplyKeyboard(data []QueueInfo) tgbotapi.ReplyKeyboardMarkup {
 	var queueRows [][]tgbotapi.KeyboardButton
 	var subjectRow []tgbotapi.KeyboardButton
 	var subjectButtons []tgbotapi.KeyboardButton

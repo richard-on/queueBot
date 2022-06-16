@@ -1,21 +1,25 @@
-package bot
+package db
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"queueBot/pkg/queueBot"
 	"strings"
 )
 
 func CollectUserData(id int64, username string, firstName string, lastName string) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
 	res, err := db.Query("SELECT * FROM users where user_id = ?;", id)
+	if err != nil {
+		return err
+	}
 	if !res.Next() {
 		if _, err = db.Exec("INSERT INTO users(user_id, username, first_name, last_name) VALUES(?, ?, ?, ?);", id, username, firstName, lastName); err != nil {
 			return err
@@ -25,16 +29,19 @@ func CollectUserData(id int64, username string, firstName string, lastName strin
 	return nil
 }
 
-func GetSubjects() ([]Subjects, error) {
-	db, err := sql.Open("mysql", dbInfo)
+func GetSubjects() ([]queueBot.Subjects, error) {
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	var s []Subjects
-	var row Subjects
+	var s []queueBot.Subjects
+	var row queueBot.Subjects
 	res, err := db.Query("SELECT * FROM subjects")
+	if err != nil {
+		return nil, err
+	}
 	for i := 0; res.Next(); i++ {
 		err = res.Scan(&row.Id, &row.Alias, &row.Name, &row.Schedule)
 		if err != nil {
@@ -50,16 +57,19 @@ func GetSubjects() ([]Subjects, error) {
 	return s, nil
 }
 
-func GetQueues(subjectName string) ([]QueueInfo, error) {
-	db, err := sql.Open("mysql", dbInfo)
+func GetQueues(subjectName string) ([]queueBot.QueueInfo, error) {
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	var queueSlice QueueInfo
-	var queueInfo []QueueInfo
+	var queueSlice queueBot.QueueInfo
+	var queueInfo []queueBot.QueueInfo
 	res, err := db.Query("SELECT s.subject_id, queue_id, queues_list.name FROM queues_list JOIN subjects s WHERE s.alias = ? OR s.name = ?", subjectName, subjectName)
+	if err != nil {
+		return nil, err
+	}
 	i := 0
 	for res.Next() {
 		err = res.Scan(&queueSlice.SubjectId, &queueSlice.QueueId, &queueSlice.Name)
@@ -70,14 +80,14 @@ func GetQueues(subjectName string) ([]QueueInfo, error) {
 		queueInfo = append(queueInfo, queueSlice)
 	}
 	if queueInfo == nil {
-		return nil, errors.New("did not find queues")
+		return nil, errors.New("did not find queueSlice")
 	}
 
 	return queueInfo, nil
 }
 
 func JoinQueue(subjectId int64, queueId int64, userId int64) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
@@ -105,7 +115,7 @@ func JoinQueue(subjectId int64, queueId int64, userId int64) error {
 }
 
 func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
@@ -125,13 +135,13 @@ func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
 }
 
 func PrintQueue(queueId int64, userId int64) (string, error) {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return "", err
 	}
 	defer db.Close()
 
-	var queuePrint QueuePrint
+	var queuePrint queueBot.QueuePrint
 	var sb strings.Builder
 	sb.WriteString("Current queue is:\n")
 	flag := false

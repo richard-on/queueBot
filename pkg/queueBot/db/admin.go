@@ -1,4 +1,4 @@
-package bot
+package db
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 )
 
 func CheckAdmin(ID int64, username string) bool {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return false
 	}
@@ -25,7 +25,7 @@ func CheckAdmin(ID int64, username string) bool {
 }
 
 func AddSubject(alias string, name string, schedule string) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func AddSubject(alias string, name string, schedule string) error {
 }
 
 func RmSubject(alias string, name string) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func RmSubject(alias string, name string) error {
 }
 
 func AddQueue(subjectAlias string, queueName string, queueDate string) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func AddQueue(subjectAlias string, queueName string, queueDate string) error {
 }
 
 func RmQueue(subjectAlias string, queueName string, queueDate string) error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}

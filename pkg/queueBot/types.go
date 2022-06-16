@@ -1,17 +1,13 @@
-package bot
+package queueBot
 
-import (
-	"time"
-)
-
-var botState = initial
+var BotState = Initial
 
 const (
-	initial = iota
-	subjectSelect
-	queueSelect
-	queueAction
-	adminMode
+	Initial = iota
+	SubjectSelect
+	QueueSelect
+	QueueAction
+	AdminMode
 )
 
 type Subjects struct {
@@ -25,13 +21,6 @@ type QueueInfo struct {
 	SubjectId int64
 	QueueId   int64
 	Name      string
-}
-
-type QueueList struct {
-	queueId   string
-	subjectId int64
-	name      string
-	date      time.Time
 }
 
 type QueuePrint struct {

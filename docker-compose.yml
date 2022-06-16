@@ -10,10 +10,10 @@ services:
       - bot
     image: mysql:latest
     restart: always
-    environment:
-      - MYSQL_ROOT_PASSWORD=mysqlpw
     ports:
       - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysqlpw
 
   bot:
     container_name: "bot"
@@ -24,6 +24,7 @@ services:
     build:
       context: ..
       dockerfile: ./cmd/queueBot/Dockerfile
+    image: queuebot
     environment:
       - TOKEN=2057091218:AAG4dtsDK-THlBjpD2CruAd-LhQIWbBnjx0
       - HOST=db

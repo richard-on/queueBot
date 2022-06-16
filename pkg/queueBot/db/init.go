@@ -1,4 +1,4 @@
-package bot
+package db
 
 import (
 	"database/sql"
@@ -13,7 +13,7 @@ var user = os.Getenv("USER")
 var password = os.Getenv("PASSWORD")
 var dbName = os.Getenv("DBNAME")
 
-var dbInfo = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, dbName)
+var DbInfo = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, dbName)
 var initDbInfo = fmt.Sprintf("%s:%s@tcp(%s:%s)/", user, password, host, port)
 
 func InitDb() error {
@@ -37,7 +37,7 @@ func InitDb() error {
 }
 
 func CreateTables() error {
-	db, err := sql.Open("mysql", dbInfo)
+	db, err := sql.Open("mysql", DbInfo)
 	if err != nil {
 		return err
 	}
