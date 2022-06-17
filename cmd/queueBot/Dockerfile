@@ -1,9 +1,9 @@
 FROM golang:1.18-buster as builder
 
 WORKDIR /queueBot
-COPY go.* .
+COPY go.* ./
 RUN go mod download
-COPY . .
+COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /bot cmd/queueBot/main.go
 
