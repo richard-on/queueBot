@@ -26,7 +26,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build using docker-compose
-      run: docker-compose up -d
-    - name: Build
-      run: docker run --network container:webapp-frontend appropriate/curl -s --retry 10 --retry-connrefused http://localhost:5000/
-      
+      run: docker-compose up -d 
