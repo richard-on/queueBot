@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/richard-on/QueueBot/pkg/queueBot/bot"
+	"github.com/richard-on/QueueBot/pkg/queueBot/db"
 	"log"
-	"queueBot/pkg/queueBot/bot"
-	"queueBot/pkg/queueBot/db"
 )
 
 func main() {

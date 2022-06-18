@@ -2,8 +2,8 @@ package bot
 
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"queueBot/pkg/queueBot"
-	"queueBot/pkg/queueBot/db"
+	"github.com/richard-on/QueueBot/pkg/queueBot"
+	"github.com/richard-on/QueueBot/pkg/queueBot/db"
 )
 
 func handleSubjectSelect(update tgbotapi.Update, msg tgbotapi.MessageConfig) ([]queueBot.QueueInfo, tgbotapi.MessageConfig, error) {

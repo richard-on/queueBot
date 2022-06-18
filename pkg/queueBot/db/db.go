@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"queueBot/pkg/queueBot"
+	"github.com/richard-on/QueueBot/pkg/queueBot"
 	"strings"
 )
 
