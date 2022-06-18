@@ -13,7 +13,7 @@ services:
     ports:
       - "3307:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=mysqlpw
+      - MYSQL_ROOT_PASSWORD
 
   bot:
     container_name: "bot"
@@ -25,11 +25,12 @@ services:
       context: .
       dockerfile: ./cmd/queueBot/Dockerfile
     image: queuebot
+    restart: on-failure
     environment:
-      - TOKEN=2057091218:AAG4dtsDK-THlBjpD2CruAd-LhQIWbBnjx0
-      - HOST=db
-      - PORT=3306
-      - USER=root
-      - PASSWORD=mysqlpw
-      - DBNAME=queue_db
-      - ADMIN_PASSWORD=qwerty
+      - TOKEN
+      - HOST
+      - PORT
+      - USER
+      - PASSWORD
+      - DBNAME
+      - ADMIN_PASSWORD
