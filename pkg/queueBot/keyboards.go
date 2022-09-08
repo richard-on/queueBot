@@ -4,12 +4,12 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var CommandKeyboard = tgbotapi.NewReplyKeyboard(
+/*var CommandKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("/admin"),
-		tgbotapi.NewKeyboardButton("/subjects"),
+		tgbotapi.NewKeyboardButton("admin"),
+		tgbotapi.NewKeyboardButton("subjects"),
 	),
-)
+)*/
 
 var QueueActionKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
@@ -20,6 +20,17 @@ var QueueActionKeyboard = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButton("Print"),
 	),
 )
+
+func CreateGroupReplyKeyboard(user User) tgbotapi.ReplyKeyboardMarkup {
+	GroupActionKeyboard := tgbotapi.NewReplyKeyboard(
+		tgbotapi.NewKeyboardButtonRow(
+			tgbotapi.NewKeyboardButton(user.GroupName),
+			tgbotapi.NewKeyboardButton(user.SubGroupName),
+		),
+	)
+
+	return GroupActionKeyboard
+}
 
 func CreateSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
 	var subjectRows [][]tgbotapi.KeyboardButton

@@ -1,5 +1,7 @@
 package queueBot
 
+import "database/sql"
+
 var BotState = Initial
 
 const (
@@ -10,11 +12,25 @@ const (
 	AdminMode
 )
 
+type User struct {
+	ID           int64
+	TgUsername   string
+	GroupID      int64
+	SubgroupID   sql.NullInt64
+	TgFirstName  sql.NullString
+	TgLastName   sql.NullString
+	FirstName    sql.NullString
+	LastName     sql.NullString
+	GroupName    string
+	SubGroupName string
+}
+
 type Subjects struct {
-	Id       int64  `json:"id"`
-	Alias    string `json:"alias"`
-	Name     string `json:"name"`
-	Schedule string `json:"schedule"`
+	ID                int64
+	SubjectName       string
+	IsSubgroupSubject bool
+	GroupID           int64
+	SubGroupID        int64
 }
 
 type QueueInfo struct {

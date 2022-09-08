@@ -3,10 +3,11 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"github.com/richard-on/QueueBot/cmd/queueBot/initEnv"
 )
 
 func CheckAdmin(ID int64, username string) bool {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return false
 	}
@@ -17,9 +18,9 @@ func CheckAdmin(ID int64, username string) bool {
 		return false
 	}
 	if res.Next() {
-		if _, err = db.Exec("INSERT INTO admins(is_logged) VALUES(1);"); err != nil {
+		/*if _, err = db.Exec("INSERT INTO admins(is_logged) VALUES(1);"); err != nil {
 			return false
-		}
+		}*/
 
 		return true
 	}
@@ -28,7 +29,7 @@ func CheckAdmin(ID int64, username string) bool {
 }
 
 func AddSubject(alias string, name string, schedule string) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
@@ -50,7 +51,7 @@ func AddSubject(alias string, name string, schedule string) error {
 }
 
 func RmSubject(alias string, name string) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func RmSubject(alias string, name string) error {
 }
 
 func AddQueue(subjectAlias string, queueName string, queueDate string) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
@@ -99,13 +100,13 @@ func AddQueue(subjectAlias string, queueName string, queueDate string) error {
 }
 
 func RmQueue(subjectAlias string, queueName string, queueDate string) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	_, err = db.Exec("DROP TABLE " + dbName + ".queue_" + subjectAlias + "_" + queueName)
+	_, err = db.Exec("DROP TABLE " + initEnv.DbName + ".queue_" + subjectAlias + "_" + queueName)
 	if err != nil {
 		return err
 	}

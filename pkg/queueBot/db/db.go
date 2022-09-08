@@ -5,23 +5,110 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/richard-on/QueueBot/cmd/queueBot/initEnv"
 	"github.com/richard-on/QueueBot/pkg/queueBot"
 	"strings"
 )
 
-func CollectUserData(id int64, username string, firstName string, lastName string) error {
-	db, err := sql.Open("mysql", DbInfo)
+func GetUserData(id int64, tgUsername string) (queueBot.User, error) {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
+	if err != nil {
+		return queueBot.User{}, err
+	}
+	defer db.Close()
+
+	res, err := db.Query("SELECT * FROM users where tg_user_id = ? OR tg_username = ?;", id, tgUsername)
+	if err != nil {
+		return queueBot.User{}, err
+	}
+
+	var user queueBot.User
+	for res.Next() {
+		err = res.Scan(
+			&user.Id,
+			&user.TgUsername,
+			&user.GroupID,
+			&user.SubgroupID,
+			&user.TgFirstName,
+			&user.TgLastName,
+			&user.FirstName,
+			&user.LastName)
+		if err != nil {
+			panic(err)
+		}
+
+		return user, nil
+	}
+
+	return queueBot.User{}, err
+}
+
+func GetGroup(user queueBot.User) (string, error) {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	res, err := db.Query("SELECT * FROM `groups` where group_id = ?;", user.GroupID)
+	if err != nil {
+		return "", err
+	}
+
+	var groupID string
+	var groupName string
+	for res.Next() {
+		err = res.Scan(&groupID, &groupName)
+		if err != nil {
+			panic(err)
+		}
+
+		return groupName, nil
+	}
+
+	return "", err
+}
+
+func GetSubGroup(user queueBot.User) (string, error) {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	res, err := db.Query("SELECT * FROM subgroups where subgroup_id = ?;", user.SubgroupID)
+	if err != nil {
+		return "", err
+	}
+
+	var subgroupID string
+	var subgroupName string
+	for res.Next() {
+		err = res.Scan(&subgroupID, &subgroupName)
+		if err != nil {
+			panic(err)
+		}
+
+		return subgroupName, nil
+	}
+
+	return "", err
+}
+
+func CollectUserData(id int64, tgUsername string, tgFirstName string, tgLastName string) error {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	res, err := db.Query("SELECT * FROM users where user_id = ?;", id)
+	res, err := db.Query("SELECT * FROM users where tg_user_id = ?;", id)
 	if err != nil {
 		return err
 	}
 	if !res.Next() {
-		if _, err = db.Exec("INSERT INTO users(user_id, username, first_name, last_name) VALUES(?, ?, ?, ?);", id, username, firstName, lastName); err != nil {
+		if _, err = db.Exec("INSERT INTO users(tg_user_id, tg_username, tg_first_name, tg_last_name, group_id) VALUES(?, ?, ?, ?, 0);",
+			id, tgUsername, tgFirstName, tgLastName); err != nil {
 			return err
 		}
 	}
@@ -29,8 +116,8 @@ func CollectUserData(id int64, username string, firstName string, lastName strin
 	return nil
 }
 
-func GetSubjects() ([]queueBot.Subjects, error) {
-	db, err := sql.Open("mysql", DbInfo)
+func GetSubjects(user queueBot.User) ([]queueBot.Subjects, error) {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -38,12 +125,14 @@ func GetSubjects() ([]queueBot.Subjects, error) {
 
 	var s []queueBot.Subjects
 	var row queueBot.Subjects
-	res, err := db.Query("SELECT * FROM subjects")
+	res, err := db.Query(
+		"SELECT * FROM subjects WHERE group_id = ? OR is_subgroup_subject = TRUE AND subgroup_id = ?",
+		user.GroupID, user.SubgroupID)
 	if err != nil {
 		return nil, err
 	}
 	for i := 0; res.Next(); i++ {
-		err = res.Scan(&row.Id, &row.Alias, &row.Name, &row.Schedule)
+		err = res.Scan(&row.ID, &row.SubjectName, &row.IsSubgroupSubject, &row.GroupID, &row.IsSubgroupSubject)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +147,7 @@ func GetSubjects() ([]queueBot.Subjects, error) {
 }
 
 func GetQueues(subjectName string) ([]queueBot.QueueInfo, error) {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +176,7 @@ func GetQueues(subjectName string) ([]queueBot.QueueInfo, error) {
 }
 
 func JoinQueue(subjectId int64, queueId int64, userId int64) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
@@ -121,7 +210,7 @@ func JoinQueue(subjectId int64, queueId int64, userId int64) error {
 }
 
 func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
@@ -144,7 +233,7 @@ func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
 }
 
 func PrintQueue(queueId int64, userId int64) (string, error) {
-	db, err := sql.Open("mysql", DbInfo)
+	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return "", err
 	}
