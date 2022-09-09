@@ -28,14 +28,14 @@ type User struct {
 type Subjects struct {
 	ID                int64
 	SubjectName       string
-	IsSubgroupSubject bool
+	IsSubgroupSubject sql.NullBool
 	GroupID           int64
-	SubGroupID        int64
+	SubGroupID        sql.NullInt64
 }
 
 type QueueInfo struct {
-	SubjectId int64
 	QueueId   int64
+	SubjectId int64
 	Name      string
 }
 
@@ -43,5 +43,5 @@ type QueuePrint struct {
 	Username  string
 	FirstName string
 	LastName  string
-	Position  int
+	Position  sql.NullInt64
 }

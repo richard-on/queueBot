@@ -25,7 +25,7 @@ func GetUserData(id int64, tgUsername string) (queueBot.User, error) {
 	var user queueBot.User
 	for res.Next() {
 		err = res.Scan(
-			&user.Id,
+			&user.ID,
 			&user.TgUsername,
 			&user.GroupID,
 			&user.SubgroupID,
@@ -155,13 +155,14 @@ func GetQueues(subjectName string) ([]queueBot.QueueInfo, error) {
 
 	var queueSlice queueBot.QueueInfo
 	var queueInfo []queueBot.QueueInfo
-	res, err := db.Query("SELECT s.subject_id, queue_id, queues_list.name FROM queues_list JOIN subjects s WHERE s.alias = ? OR s.name = ?", subjectName, subjectName)
+	res, err := db.Query(`SELECT queue_id, s.subject_id, name FROM queues_list JOIN subjects s ON
+    	s.subject_id = queues_list.subject_id WHERE subject_name = ?`, subjectName)
 	if err != nil {
 		return nil, err
 	}
 	i := 0
 	for res.Next() {
-		err = res.Scan(&queueSlice.SubjectId, &queueSlice.QueueId, &queueSlice.Name)
+		err = res.Scan(&queueSlice.QueueId, &queueSlice.SubjectId, &queueSlice.Name)
 		if err != nil {
 			panic(err)
 		}
@@ -186,7 +187,7 @@ func JoinQueue(subjectId int64, queueId int64, userId int64) error {
 	if err != nil {
 		return err
 	}
-	var position int
+	var position sql.NullInt64
 	if !res.Next() {
 		res, err = db.Query("SELECT MAX(position) FROM queue WHERE queue_id = ?;", queueId)
 		if err != nil {
@@ -198,7 +199,15 @@ func JoinQueue(subjectId int64, queueId int64, userId int64) error {
 				return err
 			}
 		}
-		_, err = db.Exec("INSERT INTO queue(subject_id, queue_id, user_id, position, time) VALUES (?, ?, ?, ?, NOW())", subjectId, queueId, userId, position+1)
+
+		if position.Valid == false {
+			_, err = db.Exec("INSERT INTO queue(subject_id, queue_id, user_id, position) VALUES (?, ?, ?, ?)",
+				subjectId, queueId, userId, 1)
+		} else {
+			_, err = db.Exec("INSERT INTO queue(subject_id, queue_id, user_id, position) VALUES (?, ?, ?, ?)",
+				subjectId, queueId, userId, position.Int64+1)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -216,15 +225,20 @@ func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
 	}
 	defer db.Close()
 
-	res, err := db.Query("SELECT * FROM queue WHERE queue_id = ? AND user_id = ?;", queueId, userId)
+	res, err := db.Query("SELECT position FROM queue WHERE queue_id = ? AND user_id = ?;", queueId, userId)
 	if err != nil {
 		return err
 	}
 	if res.Next() {
+		var queuePos int64
+		err = res.Scan(&queuePos)
+		nextPos, err := db.Query(`SELECT position FROM queue WHERE queue_id = ? AND position = ?;`, queueId, queuePos-1)
+
 		_, err = db.Exec("DELETE FROM queue WHERE subject_id = ? AND queue_id = ? AND user_id = ?", subjectId, queueId, userId)
 		if err != nil {
 			return err
 		}
+		_, err = db.Exec(``)
 	} else {
 		return errors.New("not in queue")
 	}
@@ -243,7 +257,8 @@ func PrintQueue(queueId int64, userId int64) (string, error) {
 	var sb strings.Builder
 	sb.WriteString("Current queue is:\n")
 	flag := false
-	res, err := db.Query("SELECT u.username, u.first_name, u.last_name, position FROM queue JOIN users u ON u.user_id = queue.user_id WHERE queue_id = ? ORDER BY position;", queueId)
+	res, err := db.Query(`SELECT u.tg_username, u.first_name, u.last_name, position FROM queue JOIN users u ON
+        u.tg_user_id = queue.user_id WHERE queue_id = ? ORDER BY position;`, queueId)
 	if err != nil {
 		return "", err
 	}
@@ -252,7 +267,7 @@ func PrintQueue(queueId int64, userId int64) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		str := fmt.Sprintf("%d. %s %s (@%s)\n", queuePrint.Position, queuePrint.FirstName, queuePrint.LastName, queuePrint.Username)
+		str := fmt.Sprintf("%d. %s %s (@%s)\n", queuePrint.Position.Int64, queuePrint.FirstName, queuePrint.LastName, queuePrint.Username)
 		sb.WriteString(str)
 		flag = true
 	}

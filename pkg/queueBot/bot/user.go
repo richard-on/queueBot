@@ -7,20 +7,20 @@ import (
 )
 
 func handleSubjectSelect(update tgbotapi.Update, msg tgbotapi.MessageConfig) ([]queueBot.QueueInfo, tgbotapi.MessageConfig, error) {
-	subjects, err := db.GetSubjects()
+	subjects, err := db.GetSubjects(user)
 	if err != nil {
 		return nil, msg, err
 	}
 
 	var queues []queueBot.QueueInfo
 	for _, subject := range subjects {
-		if update.Message.Text == subject.Name || update.Message.Text == subject.Alias {
+		if update.Message.Text == subject.SubjectName {
 			queueBot.BotState = queueBot.QueueSelect
 			queues, err = db.GetQueues(update.Message.Text)
 			if err != nil {
 				return nil, msg, err
 			}
-			text := subject.Name + " selected. Now select queue"
+			text := subject.SubjectName + " selected. Now select queue"
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, text)
 			msg.ReplyMarkup = queueBot.CreateQueueReplyKeyboard(queues)
 		}
@@ -44,7 +44,7 @@ func handleQueueSelect(queues []queueBot.QueueInfo, update tgbotapi.Update, msg 
 
 func handleActionSelect(queue queueBot.QueueInfo, update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
 	switch update.Message.Text {
-	case "Enter":
+	case "Войти в очередь":
 		err := db.JoinQueue(queue.SubjectId, queue.QueueId, update.Message.Chat.ID)
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Error entering the queue: "+err.Error())
@@ -52,7 +52,7 @@ func handleActionSelect(queue queueBot.QueueInfo, update tgbotapi.Update, msg tg
 		}
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Entered queue")
 
-	case "Leave":
+	case "Выйти из очереди":
 		err := db.LeaveQueue(queue.SubjectId, queue.QueueId, update.Message.Chat.ID)
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Error leaving the queue: "+err.Error())
@@ -60,7 +60,7 @@ func handleActionSelect(queue queueBot.QueueInfo, update tgbotapi.Update, msg tg
 		}
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Left queue")
 
-	case "Print":
+	case "Показать очередь":
 		data, err := db.PrintQueue(queue.QueueId, update.Message.Chat.ID)
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Error printing the queue: "+err.Error())
@@ -69,6 +69,8 @@ func handleActionSelect(queue queueBot.QueueInfo, update tgbotapi.Update, msg tg
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, data)
 
 	}
+
+	queueBot.BotState = queueBot.QueueAction
 
 	return msg, nil
 }

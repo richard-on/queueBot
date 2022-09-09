@@ -9,6 +9,7 @@ import (
 
 var queueSlice []queueBot.QueueInfo
 var queue queueBot.QueueInfo
+var user queueBot.User
 
 func HandleState(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
 	var err error
@@ -52,23 +53,24 @@ func HandleState(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi.M
 
 	default:
 		queueBot.BotState = queueBot.Initial
-		msg.ReplyMarkup = tgbotapi.NewKeyboardButton("start")
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Unknown text")
+		msg.ReplyMarkup = queueBot.StartKeyboard
 	}
 
 	return msg, nil
 }
 
 func handleCommand(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
+	var err error
 	switch update.Message.Text {
 	case "/start":
-		/*err := db.CollectUserData(update.Message.Chat.ID, update.Message.Chat.UserName,
+		err = db.CollectUserData(update.Message.Chat.ID, update.Message.Chat.UserName,
 			update.Message.Chat.FirstName, update.Message.Chat.LastName)
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Error, we can't identify you.")
 			return msg, err
-		}*/
-		user, err := db.GetUserData(update.Message.Chat.ID, update.Message.Chat.UserName)
+		}
+		user, err = db.GetUserData(update.Message.Chat.ID, update.Message.Chat.UserName)
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Error, we can't identify you.")
 			return msg, err
@@ -77,8 +79,8 @@ func handleCommand(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi
 		if err != nil {
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, err.Error())
 		}
-		msg = tgbotapi.NewMessage(update.Message.Chat.ID, greet)
 		msg.ReplyMarkup = queueBot.CreateGroupReplyKeyboard(user)
+		msg = tgbotapi.NewMessage(update.Message.Chat.ID, greet)
 
 	case "admin":
 		if db.CheckAdmin(update.Message.Chat.ID, update.Message.Chat.UserName) {
@@ -89,9 +91,10 @@ func handleCommand(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi
 			msg = tgbotapi.NewMessage(update.Message.Chat.ID, "You are not an admin")
 		}
 
-	case "subjects":
+	case "/subjects":
+		user, err = db.GetUserData(update.Message.Chat.ID, update.Message.Chat.UserName)
 		queueBot.BotState = queueBot.SubjectSelect
-		subjects, err := db.GetSubjects()
+		subjects, err := db.GetSubjects(user)
 		if err != nil {
 			return msg, err
 		}
@@ -106,7 +109,7 @@ func handleCommand(update tgbotapi.Update, msg tgbotapi.MessageConfig) (tgbotapi
 
 	default:
 		queueBot.BotState = queueBot.Initial
-		msg.ReplyMarkup = tgbotapi.NewKeyboardButton("start")
+		msg.ReplyMarkup = queueBot.StartKeyboard
 		msg = tgbotapi.NewMessage(update.Message.Chat.ID, "Unknown command")
 	}
 
