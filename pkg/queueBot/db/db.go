@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/richard-on/QueueBot/cmd/queueBot/initEnv"
 	"github.com/richard-on/QueueBot/pkg/queueBot"
 	"strings"
@@ -25,7 +26,7 @@ func GetUserData(id int64, tgUsername string) (queueBot.User, error) {
 	var user queueBot.User
 	for res.Next() {
 		err = res.Scan(
-			&user.ID,
+			&user.UserID,
 			&user.TgUsername,
 			&user.GroupID,
 			&user.SubgroupID,
@@ -95,25 +96,60 @@ func GetSubGroup(user queueBot.User) (string, error) {
 	return "", err
 }
 
-func CollectUserData(id int64, tgUsername string, tgFirstName string, tgLastName string) error {
+func AddUser(user *queueBot.User) error {
 	db, err := sql.Open("mysql", initEnv.DbInfo)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	res, err := db.Query("SELECT * FROM users where tg_user_id = ?;", id)
-	if err != nil {
+	if _, err = db.Exec(`INSERT INTO users(tg_user_id, tg_username, tg_first_name, tg_last_name, group_id)
+			VALUES(?, ?, ?, ?, 0);`, user.UserID, user.TgUsername, user.FirstName, user.LastName); err != nil {
 		return err
-	}
-	if !res.Next() {
-		if _, err = db.Exec("INSERT INTO users(tg_user_id, tg_username, tg_first_name, tg_last_name, group_id) VALUES(?, ?, ?, ?, 0);",
-			id, tgUsername, tgFirstName, tgLastName); err != nil {
-			return err
-		}
 	}
 
 	return nil
+}
+
+func CheckUserData(tgUser *tgbotapi.User) (queueBot.User, error) {
+	db, err := sql.Open("mysql", initEnv.DbInfo)
+	if err != nil {
+		return queueBot.User{}, err
+	}
+	defer db.Close()
+
+	res, err := db.Query("SELECT * FROM users where tg_user_id = ?;", tgUser.ID)
+	if err != nil {
+		return queueBot.User{}, err
+	}
+
+	var user queueBot.User
+	if !res.Next() {
+		return queueBot.User{}, errors.New("no such user")
+		/*if _, err = db.Exec(`INSERT INTO users(tg_user_id, tg_username, tg_first_name, tg_last_name, group_id)
+			VALUES(?, ?, ?, ?, 0);`, user.ID, user.UserName, user.FirstName, user.LastName); err != nil {
+			return err
+		}*/
+	} else {
+		err = res.Scan(
+			&user.UserID,
+			&user.TgUsername,
+			&user.GroupID,
+			&user.SubgroupID,
+			&user.TgFirstName,
+			&user.TgLastName,
+			&user.FirstName,
+			&user.LastName)
+		if err != nil {
+			panic(err)
+		}
+
+		if user.GroupID == 0 || !user.SubgroupID.Valid {
+			return queueBot.User{}, errors.New("unreg")
+		}
+	}
+
+	return user, nil
 }
 
 func GetSubjects(user queueBot.User) ([]queueBot.Subjects, error) {
@@ -232,7 +268,12 @@ func LeaveQueue(subjectId int64, queueId int64, userId int64) error {
 	if res.Next() {
 		var queuePos int64
 		err = res.Scan(&queuePos)
-		nextPos, err := db.Query(`SELECT position FROM queue WHERE queue_id = ? AND position = ?;`, queueId, queuePos-1)
+
+		_, err = db.Exec(`UPDATE queue SET position = ? WHERE queue_id = ? AND position > ?;`,
+			queuePos, queueId, queuePos)
+		if err != nil {
+			return err
+		}
 
 		_, err = db.Exec("DELETE FROM queue WHERE subject_id = ? AND queue_id = ? AND user_id = ?", subjectId, queueId, userId)
 		if err != nil {

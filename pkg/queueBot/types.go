@@ -6,6 +6,7 @@ var BotState = Initial
 
 const (
 	Initial = iota
+	GroupSelect
 	SubjectSelect
 	QueueSelect
 	QueueAction
@@ -13,7 +14,8 @@ const (
 )
 
 type User struct {
-	ID           int64
+	UserID       int64
+	ChatID       int64
 	TgUsername   string
 	GroupID      int64
 	SubgroupID   sql.NullInt64
