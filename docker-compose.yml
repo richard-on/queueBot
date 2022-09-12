@@ -23,7 +23,7 @@ services:
       - bot
     build:
       context: .
-      dockerfile: ./cmd/queueBot/Dockerfile
+      dockerfile: cmd/Dockerfile
     image: queuebot
     restart: on-failure
     environment:

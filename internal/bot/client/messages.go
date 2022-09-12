@@ -1,9 +1,8 @@
-package bot
+package client
 
 import (
 	"fmt"
-	"github.com/richard-on/QueueBot/pkg/queueBot"
-	"github.com/richard-on/QueueBot/pkg/queueBot/db"
+	"github.com/richard-on/QueueBot/internal/bot/model"
 )
 
 var greeting = `Привет! Это бот для ведения очередей на сдачу лаб.
@@ -15,19 +14,19 @@ Telegram: %v
 Группа: %v
 Кафедра: %v`
 
-func createGreeting(user queueBot.User) (string, error) {
-	group, err := db.GetGroup(user)
+func (c *Client) CreateGreeting(user *model.User) (string, error) {
+	group, err := c.Db.GetGroupName(user)
 	if err != nil {
 		return "", err
 	}
 
-	subgroup, err := db.GetSubGroup(user)
+	subgroup, err := c.Db.GetSubGroupName(user)
 	if err != nil {
 		return "", err
 	}
 
-	user.GroupName = group
-	user.SubGroupName = subgroup
+	/*user.GroupName = group
+	user.SubGroupName = subgroup*/
 
 	return fmt.Sprintf(greeting,
 		"@"+user.TgUsername, user.FirstName.String, user.LastName.String, group, subgroup), nil

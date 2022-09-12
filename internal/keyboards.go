@@ -1,11 +1,14 @@
-package queueBot
+package internal
 
-import tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+import (
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/richard-on/QueueBot/internal/db"
+)
 
 var StartKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("start"),
-		tgbotapi.NewKeyboardButton("subjects"),
+		tgbotapi.NewKeyboardButton("/start"),
+		tgbotapi.NewKeyboardButton("/groups"),
 	),
 )
 
@@ -19,18 +22,27 @@ var QueueActionKeyboard = tgbotapi.NewReplyKeyboard(
 	),
 )
 
-func CreateGroupReplyKeyboard(user User) tgbotapi.ReplyKeyboardMarkup {
-	GroupActionKeyboard := tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton(user.GroupName),
-			tgbotapi.NewKeyboardButton(user.SubGroupName),
-		),
-	)
+func CreateGroupReplyKeyboard(group ...string) tgbotapi.ReplyKeyboardMarkup {
+	var queueRows [][]tgbotapi.KeyboardButton
+	var subjectRow []tgbotapi.KeyboardButton
+	var subjectButtons []tgbotapi.KeyboardButton
 
-	return GroupActionKeyboard
+	for i := 0; i < len(group); i++ {
+		subjectButton := tgbotapi.NewKeyboardButton(group[i])
+		subjectButtons = append(subjectButtons, subjectButton)
+		if (i+1)%3 == 0 || i == len(group)-1 {
+			subjectRow = tgbotapi.NewKeyboardButtonRow(subjectButtons...)
+			queueRows = append(queueRows, subjectRow)
+			subjectButtons = nil
+		}
+	}
+
+	var newKeyboard = tgbotapi.NewReplyKeyboard(queueRows...)
+
+	return newKeyboard
 }
 
-func CreateSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
+func CreateSubjectReplyKeyboard(data []db.Subject) tgbotapi.ReplyKeyboardMarkup {
 	var subjectRows [][]tgbotapi.KeyboardButton
 	var subjectRow []tgbotapi.KeyboardButton
 	var subjectButtons []tgbotapi.KeyboardButton
@@ -50,7 +62,7 @@ func CreateSubjectReplyKeyboard(data []Subjects) tgbotapi.ReplyKeyboardMarkup {
 	return subjectNewKeyboard
 }
 
-func CreateQueueReplyKeyboard(data []QueueInfo) tgbotapi.ReplyKeyboardMarkup {
+func CreateQueueReplyKeyboard(data []db.Queue) tgbotapi.ReplyKeyboardMarkup {
 	var queueRows [][]tgbotapi.KeyboardButton
 	var subjectRow []tgbotapi.KeyboardButton
 	var subjectButtons []tgbotapi.KeyboardButton

@@ -3,22 +3,22 @@ package db
 import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/richard-on/QueueBot/cmd/queueBot/initEnv"
+	"github.com/richard-on/QueueBot/config"
 )
 
 func InitDb() error {
-	db, err := sql.Open("mysql", initEnv.InitDbInfo)
+	db, err := sql.Open("mysql", config.InitDbInfo)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`CREATE DATABASE IF NOT EXISTS ` + initEnv.DbName)
+	_, err = db.Exec(`CREATE DATABASE IF NOT EXISTS ` + config.DbName)
 	if err != nil {
 		return err
 	}
 
-	_, err = db.Exec(`USE ` + initEnv.DbName)
+	_, err = db.Exec(`USE ` + config.DbName)
 	if err != nil {
 		return err
 	}
@@ -27,7 +27,7 @@ func InitDb() error {
 }
 
 func CreateTables() error {
-	db, err := sql.Open("mysql", initEnv.DbInfo)
+	db, err := sql.Open("mysql", config.DbInfo)
 	if err != nil {
 		return err
 	}
