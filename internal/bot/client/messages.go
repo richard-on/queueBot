@@ -29,5 +29,5 @@ func (c *Client) CreateGreeting(user *model.User) (string, error) {
 	user.SubGroupName = subgroup*/
 
 	return fmt.Sprintf(greeting,
-		"@"+user.TgUsername, user.FirstName.String, user.LastName.String, group, subgroup), nil
+		"@"+user.TgUsername, user.FirstName, user.LastName, group, subgroup), nil
 }

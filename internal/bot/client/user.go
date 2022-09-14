@@ -28,14 +28,13 @@ func (c *Client) handleGroupSelect(msg tgbotapi.MessageConfig) ([]db.Subject, tg
 		group = groupName
 
 	} else if msg.Text == subGroupName {
-		subjects, err = c.Db.GetSubjectList(c.User.SubgroupID.Int64)
+		subjects, err = c.Db.GetSubjectList(c.User.SubgroupID)
 		if err != nil {
 			return nil, tgbotapi.MessageConfig{}, err
 		}
 		group = subGroupName
 
 	} else {
-		c.State = GroupSelect
 		msg = tgbotapi.NewMessage(c.User.ChatID, "Неизвестная группа")
 		return subjects, msg, nil
 	}
@@ -52,7 +51,6 @@ func (c *Client) handleSubjectSelect(msg tgbotapi.MessageConfig) ([]db.Queue, tg
 	var err error
 	for _, subject := range c.Subject {
 		if msg.Text == subject.SubjectName {
-			c.State = QueueSelect
 			queues, err = c.Db.GetQueueList(subject)
 			if err != nil {
 				return nil, msg, err
@@ -63,15 +61,20 @@ func (c *Client) handleSubjectSelect(msg tgbotapi.MessageConfig) ([]db.Queue, tg
 		}
 	}
 
+	c.State = QueueSelect
+
 	return queues, msg, nil
 }
 
 func (c *Client) handleQueueSelect(queues []db.Queue, msg tgbotapi.MessageConfig) (db.Queue, tgbotapi.MessageConfig, error) {
 	for _, queue := range queues {
 		if msg.Text == queue.Name {
-			c.State = QueueAction
+
 			msg = tgbotapi.NewMessage(c.User.ChatID, "Выбрана очередь \""+queue.Name+"\"")
 			msg.ReplyMarkup = internal.QueueActionKeyboard
+
+			c.State = QueueAction
+
 			return queue, msg, nil
 		}
 	}
@@ -105,6 +108,14 @@ func (c *Client) handleActionSelect(queue db.Queue, msg tgbotapi.MessageConfig) 
 		}
 		msg = tgbotapi.NewMessage(c.User.ChatID, data)
 
+	default:
+		msg = tgbotapi.NewMessage(c.User.ChatID, "Неподдерживаемое действие")
+		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("/groups"),
+				tgbotapi.NewKeyboardButton("/back"),
+			),
+		)
 	}
 
 	c.State = QueueAction

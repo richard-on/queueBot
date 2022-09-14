@@ -32,28 +32,27 @@ type Client struct {
 	LastConn time.Time
 }
 
-func NewClient(update tgbotapi.Update, database *sql.DB) (*Client, error) {
+func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) (*Client, error) {
 	var client Client
 	client.Db = db.NewQueueDB(database)
-	tgUser := update.SentFrom()
 
 	user, err := client.Db.GetUser(tgUser.ID)
-	if err != nil {
+	if err == db.ErrLackUserInfo || err == db.ErrNoUserInfo {
 		client.User = &model.User{
-			UserID:      tgUser.ID,
-			ChatID:      update.Message.Chat.ID,
-			TgUsername:  tgUser.UserName,
-			GroupID:     0,
-			SubgroupID:  sql.NullInt64{},
-			TgFirstName: sql.NullString{String: tgUser.FirstName},
-			TgLastName:  sql.NullString{String: tgUser.LastName},
-			FirstName:   sql.NullString{},
-			LastName:    sql.NullString{},
+			UserID:       tgUser.ID,
+			ChatID:       update.Message.Chat.ID,
+			TgUsername:   tgUser.UserName,
+			GroupID:      0,
+			TgFirstName:  tgUser.FirstName,
+			TgLastName:   tgUser.LastName,
+			IsRegistered: false,
 		}
 
-		err = client.Db.AddUser(client.User)
-		if err != nil {
-			return &client, err
+		if err == db.ErrNoUserInfo {
+			err = client.Db.AddUser(client.User)
+			if err != nil {
+				return &client, err
+			}
 		}
 
 		client.State = Initial
@@ -61,8 +60,11 @@ func NewClient(update tgbotapi.Update, database *sql.DB) (*Client, error) {
 		client.LastConn = time.Now()
 
 		return &client, err
+	} else if err != nil {
+		return &client, err
 	}
 
+	user.IsRegistered = true
 	client.User = user
 	client.User.ChatID = client.User.UserID
 	client.IsActive = true
@@ -74,6 +76,7 @@ func NewClient(update tgbotapi.Update, database *sql.DB) (*Client, error) {
 func (c *Client) CheckTimeout() {
 	if time.Now().Sub(c.LastConn) > time.Minute*1 {
 		c.IsActive = false
+		c.State = Initial
 	}
 }
 
@@ -81,7 +84,7 @@ func (c *Client) HandleState(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig
 	var err error
 	switch c.State {
 	case Initial:
-		msg, err = c.handleCommand(msg)
+		msg, err = c.HandleCommand(msg)
 
 	case GroupSelect:
 		c.Subject, msg, err = c.handleGroupSelect(msg)
@@ -110,8 +113,12 @@ func (c *Client) HandleState(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig
 
 	default:
 		c.State = Initial
-		msg = tgbotapi.NewMessage(c.User.ChatID, "Unknown text")
-		msg.ReplyMarkup = internal.StartKeyboard
+		msg = tgbotapi.NewMessage(c.User.ChatID, "Unknown command")
+		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("/start"),
+			),
+		)
 	}
 
 	if err != nil {
@@ -121,7 +128,7 @@ func (c *Client) HandleState(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig
 	return msg, nil
 }
 
-func (c *Client) handleCommand(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
+func (c *Client) HandleCommand(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
 	switch msg.Text {
 	case "/start":
 		greet, err := c.CreateGreeting(c.User)
@@ -144,21 +151,10 @@ func (c *Client) handleCommand(msg tgbotapi.MessageConfig) (tgbotapi.MessageConf
 		c.State = GroupSelect
 
 	case "/groups":
-		if c.User.GroupID == 0 && !c.User.SubgroupID.Valid {
+		if c.User.GroupID == 0 && c.User.SubgroupID == 0 {
 			msg = tgbotapi.NewMessage(c.User.ChatID, "Недостаточно информации")
 			c.State = Initial
 		}
-
-		/*internal.BotState = internal.SubjectSelect
-		subjects, err := db2.GetSubjects(user)
-		if err != nil {
-			return msg, err
-		}
-		var sb strings.Builder
-		sb.WriteString("Choose a subject. Available subjects are:\n")
-		for _, subject := range subjects {
-			sb.WriteString("• " + subject.SubjectName + "\n")
-		}*/
 
 		c.State = GroupSelect
 
@@ -189,13 +185,7 @@ func (c *Client) handleCommand(msg tgbotapi.MessageConfig) (tgbotapi.MessageConf
 		}*/
 
 	default:
-		c.State = Initial
-		msg = tgbotapi.NewMessage(c.User.ChatID, "Unknown command")
-		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("/start"),
-			),
-		)
+		msg, _ = c.HandleState(msg)
 	}
 
 	return msg, nil

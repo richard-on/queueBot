@@ -14,11 +14,14 @@ var StartKeyboard = tgbotapi.NewReplyKeyboard(
 
 var QueueActionKeyboard = tgbotapi.NewReplyKeyboard(
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("Войти в очередь"),
-		tgbotapi.NewKeyboardButton("Выйти из очереди"),
+		tgbotapi.NewKeyboardButton("Показать очередь"),
 	),
 	tgbotapi.NewKeyboardButtonRow(
-		tgbotapi.NewKeyboardButton("Показать очередь"),
+		tgbotapi.NewKeyboardButton("/groups"),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("Войти в очередь"),
+		tgbotapi.NewKeyboardButton("Выйти из очереди"),
 	),
 )
 

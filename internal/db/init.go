@@ -13,7 +13,7 @@ func InitDb() error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(`CREATE DATABASE IF NOT EXISTS ` + config.DbName)
+	_, err = db.Exec(`CREATE SCHEMA IF NOT EXISTS ` + config.DbName)
 	if err != nil {
 		return err
 	}

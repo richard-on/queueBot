@@ -1,18 +1,14 @@
-FROM golang:latest
+FROM golang:1.18-buster as builder
 
-WORKDIR app/
+WORKDIR /app
+COPY go.* ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bot ./cmd
 
-COPY go.mod ./
-COPY go.sum ./
+FROM alpine:3.15.4
+WORKDIR /app
+COPY --from=builder /app/bot /app/bot
+COPY --from=builder /app/.env /app/.env
 
-RUN go get download
-
-COPY bot/ ./
-COPY main.go ./
-
-RUN go build -o "/botApp"
-
-EXPOSE 8080
-
-CMD ["/botApp"]
-
+CMD ["sh", "-c", "/app/bot"]
