@@ -42,7 +42,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64, linux/x86_644
+          platforms: linux/x86_64
           tags: |
             docker.io/richardhere/queue-bot:${{ steps.prep.outputs.VERSION }}
             docker.io/richardhere/queue-bot:latest
