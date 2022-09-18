@@ -2,11 +2,8 @@ name: Publish queueBot Docker Image
 
 on:
   workflow_run:
-    branches:
-      - "test"
-    workflows:
-      - "Build"
-
+    workflows: [Build]
+    types: [completed]
 
 jobs:
   publish:
