@@ -14,6 +14,16 @@ Telegram: %v
 Группа: %v
 Кафедра: %v`
 
+var NeedMoreInfo = `Недостаточно информации о пользователе.
+
+Для работы бота необходима информация о группе и кафедре. Эти данные может предоставить только админ.
+
+Пожалуйста, подождите, пока вас зарегистрируют.`
+
+var NoSubjects = `Не найдено ни одного предмета, относящегося к этой группе.`
+
+var NoQueues = `Очереди не найдены.`
+
 func (c *Client) CreateGreeting(user *model.User) (string, error) {
 	group, err := c.Db.GetGroupName(user)
 	if err != nil {

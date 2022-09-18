@@ -6,19 +6,32 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/richard-on/QueueBot/internal/bot/model"
+	"github.com/richard-on/QueueBot/internal/logger"
+	"github.com/rs/zerolog"
+	"os"
 	"strings"
+	"time"
 )
 
 type QueueDB struct {
-	db *sql.DB
+	db  *sql.DB
+	log logger.Logger
 }
 
 func NewQueueDB(db *sql.DB) QueueDB {
-	return QueueDB{db}
+	return QueueDB{
+		db,
+		logger.NewLogger(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC1123},
+			zerolog.TraceLevel,
+			"queueBot-db"),
+	}
 }
 
 func (q *QueueDB) GetUser(id int64) (*model.User, error) {
 	res, err := q.db.Query(`SELECT * FROM users where tg_user_id = ?;`, id)
+	if err != nil {
+		return nil, err
+	}
 
 	var user model.User
 	var subgroupID sql.NullInt64
@@ -68,6 +81,8 @@ func (q *QueueDB) GetUser(id int64) (*model.User, error) {
 		return &model.User{}, ErrNoUserInfo
 	}
 
+	q.log.Dedugf("got user @%v, id: %v, isRegistered: %v", user.TgUsername, user.UserID, user.IsRegistered)
+
 	return &user, nil
 }
 
@@ -102,7 +117,7 @@ func (q *QueueDB) GetSubGroupName(user *model.User) (subGroupName string, err er
 
 func (q *QueueDB) AddUser(user *model.User) error {
 	if _, err := q.db.Exec(`INSERT INTO users(tg_user_id, tg_username, tg_first_name, tg_last_name, group_id)
-			VALUES(?, ?, ?, ?, 0);`, user.UserID, user.TgUsername, user.FirstName, user.LastName); err != nil {
+			VALUES(?, ?, ?, ?, 1);`, user.UserID, user.TgUsername, user.FirstName, user.LastName); err != nil {
 		return err
 	}
 
@@ -111,9 +126,7 @@ func (q *QueueDB) AddUser(user *model.User) error {
 
 func (q *QueueDB) GetSubjectList(group int64) (list []Subject, err error) {
 	res, err := q.db.Query(
-		`SELECT * FROM subjects WHERE is_subgroup_subject = FALSE AND group_id = ? OR
-                             is_subgroup_subject = TRUE AND subgroup_id = ?`,
-		group, group)
+		`SELECT * FROM subjects WHERE is_subgroup_subject = FALSE AND group_id = ?`, group)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +141,30 @@ func (q *QueueDB) GetSubjectList(group int64) (list []Subject, err error) {
 		list = append(list, row)
 	}
 	if list == nil {
-		return nil, errors.New("did not find subjects")
+		return nil, errors.New("предметы не найдены")
+	}
+
+	return list, nil
+}
+
+func (q *QueueDB) GetSubgroupSubjectList(subGroup int64) (list []Subject, err error) {
+	res, err := q.db.Query(
+		`SELECT * FROM subjects WHERE is_subgroup_subject = TRUE AND subgroup_id = ?`, subGroup)
+	if err != nil {
+		return nil, err
+	}
+
+	var row Subject
+	for res.Next() {
+		err = res.Scan(&row.ID, &row.SubjectName, &row.IsSubgroupSubject, &row.GroupID, &row.SubGroupID)
+		if err != nil {
+			return nil, err
+		}
+
+		list = append(list, row)
+	}
+	if list == nil {
+		return nil, errors.New("предметы не найдены")
 	}
 
 	return list, nil
@@ -152,7 +188,7 @@ func (q *QueueDB) GetQueueList(subject Subject) (list []Queue, err error) {
 		list = append(list, row)
 	}
 	if list == nil {
-		return nil, errors.New("did not find queues")
+		return nil, errors.New("очереди не найдены")
 	}
 
 	return list, nil
@@ -177,7 +213,7 @@ func (q *QueueDB) JoinQueue(user *model.User, queue *Queue) error {
 			}
 		}
 
-		if position.Valid == false {
+		if !position.Valid {
 			_, err = q.db.Exec("INSERT INTO queue(subject_id, queue_id, user_id, position) VALUES (?, ?, ?, ?)",
 				queue.SubjectId, queue.ID, user.UserID, 1)
 		} else {
@@ -203,6 +239,9 @@ func (q *QueueDB) LeaveQueue(user *model.User, queue *Queue) error {
 	if res.Next() {
 		var queuePos int64
 		err = res.Scan(&queuePos)
+		if err != nil {
+			return err
+		}
 
 		_, err = q.db.Exec(`UPDATE queue SET position = position - 1 WHERE queue_id = ? AND position > ?;`,
 			queue.ID, queuePos)

@@ -8,47 +8,47 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema queue_db
+-- Schema queuebot_dev
 -- -----------------------------------------------------
 
 -- -----------------------------------------------------
--- Schema queue_db
+-- Schema queuebot_dev
 -- -----------------------------------------------------
-CREATE SCHEMA IF NOT EXISTS queue_db DEFAULT CHARACTER SET utf8 ;
-USE queue_db ;
+CREATE SCHEMA IF NOT EXISTS queuebot_dev DEFAULT CHARACTER SET utf8 ;
+USE queuebot_dev ;
 
 -- -----------------------------------------------------
--- Table queue_db.groups
+-- Table queuebot_dev.groups
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.groups (
-  group_id BIGINT UNSIGNED NOT NULL,
+CREATE TABLE IF NOT EXISTS queuebot_dev.groups (
+  group_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   group_name VARCHAR(45) NOT NULL,
   PRIMARY KEY (group_id))
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX group_id_UNIQUE ON queue_db.groups (group_id ASC) VISIBLE;
+CREATE UNIQUE INDEX group_id_UNIQUE ON queuebot_dev.groups (group_id ASC) VISIBLE;
 
-CREATE UNIQUE INDEX gropu_name_UNIQUE ON queue_db.groups (group_name ASC) VISIBLE;
+CREATE UNIQUE INDEX gropu_name_UNIQUE ON queuebot_dev.groups (group_name ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.subgroups
+-- Table queuebot_dev.subgroups
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.subgroups (
+CREATE TABLE IF NOT EXISTS queuebot_dev.subgroups (
   subgroup_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   subgroup_name VARCHAR(45) NOT NULL,
   PRIMARY KEY (subgroup_id))
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX subgroup_id_UNIQUE ON queue_db.subgroups (subgroup_id ASC) VISIBLE;
+CREATE UNIQUE INDEX subgroup_id_UNIQUE ON queuebot_dev.subgroups (subgroup_id ASC) VISIBLE;
 
-CREATE UNIQUE INDEX subgroup_name_UNIQUE ON queue_db.subgroups (subgroup_name ASC) VISIBLE;
+CREATE UNIQUE INDEX subgroup_name_UNIQUE ON queuebot_dev.subgroups (subgroup_name ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.subjects
+-- Table queuebot_dev.subjects
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.subjects (
+CREATE TABLE IF NOT EXISTS queuebot_dev.subjects (
   subject_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   subject_name VARCHAR(255) NOT NULL,
   is_subgroup_subject TINYINT UNSIGNED ZEROFILL NOT NULL,
@@ -57,29 +57,29 @@ CREATE TABLE IF NOT EXISTS queue_db.subjects (
   PRIMARY KEY (subject_id),
   CONSTRAINT fk_subjects_groups1
     FOREIGN KEY (group_id)
-    REFERENCES queue_db.groups (group_id)
-    ON DELETE NO ACTION
+    REFERENCES queuebot_dev.groups (group_id)
+    ON DELETE CASCADE
     ON UPDATE NO ACTION,
   CONSTRAINT fk_subjects_subgroups1
     FOREIGN KEY (subgroup_id)
-    REFERENCES queue_db.subgroups (subgroup_id)
-    ON DELETE NO ACTION
+    REFERENCES queuebot_dev.subgroups (subgroup_id)
+    ON DELETE CASCADE
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX ALIAS_UNIQUE ON queue_db.subjects (subject_name ASC) VISIBLE;
+CREATE UNIQUE INDEX ALIAS_UNIQUE ON queuebot_dev.subjects (subject_name ASC) VISIBLE;
 
-CREATE UNIQUE INDEX ID_UNIQUE ON queue_db.subjects (subject_id ASC) VISIBLE;
+CREATE UNIQUE INDEX ID_UNIQUE ON queuebot_dev.subjects (subject_id ASC) VISIBLE;
 
-CREATE INDEX fk_subjects_groups1_idx ON queue_db.subjects (group_id ASC) VISIBLE;
+CREATE INDEX fk_subjects_groups1_idx ON queuebot_dev.subjects (group_id ASC) VISIBLE;
 
-CREATE INDEX fk_subjects_subgroups1_idx ON queue_db.subjects (subgroup_id ASC) VISIBLE;
+CREATE INDEX fk_subjects_subgroups1_idx ON queuebot_dev.subjects (subgroup_id ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.users
+-- Table queuebot_dev.users
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.users (
+CREATE TABLE IF NOT EXISTS queuebot_dev.users (
   tg_user_id BIGINT UNSIGNED NOT NULL,
   tg_username VARCHAR(255) NOT NULL,
   group_id BIGINT UNSIGNED NOT NULL,
@@ -91,69 +91,69 @@ CREATE TABLE IF NOT EXISTS queue_db.users (
   PRIMARY KEY (tg_user_id, group_id),
   CONSTRAINT fk_users_groups1
     FOREIGN KEY (group_id)
-    REFERENCES queue_db.groups (group_id)
+    REFERENCES queuebot_dev.groups (group_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT fk_users_subgroups1
     FOREIGN KEY (subgroup_id)
-    REFERENCES queue_db.subgroups (subgroup_id)
+    REFERENCES queuebot_dev.subgroups (subgroup_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX ID_UNIQUE ON queue_db.users (tg_user_id ASC) VISIBLE;
+CREATE UNIQUE INDEX ID_UNIQUE ON queuebot_dev.users (tg_user_id ASC) VISIBLE;
 
-CREATE UNIQUE INDEX USERNAME_UNIQUE ON queue_db.users (tg_username ASC) VISIBLE;
+CREATE UNIQUE INDEX USERNAME_UNIQUE ON queuebot_dev.users (tg_username ASC) VISIBLE;
 
-CREATE INDEX fk_users_groups1_idx ON queue_db.users (group_id ASC) VISIBLE;
+CREATE INDEX fk_users_groups1_idx ON queuebot_dev.users (group_id ASC) VISIBLE;
 
-CREATE INDEX fk_users_subgroups1_idx ON queue_db.users (subgroup_id ASC) VISIBLE;
+CREATE INDEX fk_users_subgroups1_idx ON queuebot_dev.users (subgroup_id ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.admins
+-- Table queuebot_dev.admins
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.admins (
+CREATE TABLE IF NOT EXISTS queuebot_dev.admins (
   user_ID BIGINT UNSIGNED NOT NULL,
   PRIMARY KEY (user_ID),
   CONSTRAINT fk_admins_users1
     FOREIGN KEY (user_ID)
-    REFERENCES queue_db.users (tg_user_id)
+    REFERENCES queuebot_dev.users (tg_user_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX fk_admins_users1_idx ON queue_db.admins (user_ID ASC) VISIBLE;
+CREATE INDEX fk_admins_users1_idx ON queuebot_dev.admins (user_ID ASC) VISIBLE;
 
-CREATE UNIQUE INDEX users_ID_UNIQUE ON queue_db.admins (user_ID ASC) VISIBLE;
+CREATE UNIQUE INDEX users_ID_UNIQUE ON queuebot_dev.admins (user_ID ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.queues_list
+-- Table queuebot_dev.queues_list
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.queues_list (
+CREATE TABLE IF NOT EXISTS queuebot_dev.queues_list (
   queue_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   subject_id BIGINT UNSIGNED NOT NULL,
   name VARCHAR(255) NOT NULL,
   PRIMARY KEY (queue_id, subject_id),
   CONSTRAINT fk_queues_subjects1
     FOREIGN KEY (subject_id)
-    REFERENCES queue_db.subjects (subject_id)
+    REFERENCES queuebot_dev.subjects (subject_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE UNIQUE INDEX ID_UNIQUE ON queue_db.queues_list (queue_id ASC) VISIBLE;
+CREATE UNIQUE INDEX ID_UNIQUE ON queuebot_dev.queues_list (queue_id ASC) VISIBLE;
 
-CREATE INDEX fk_queues_subjects1_idx ON queue_db.queues_list (subject_id ASC) VISIBLE;
+CREATE INDEX fk_queues_subjects1_idx ON queuebot_dev.queues_list (subject_id ASC) VISIBLE;
 
-CREATE UNIQUE INDEX name_UNIQUE ON queue_db.queues_list (name ASC) VISIBLE;
+CREATE UNIQUE INDEX name_UNIQUE ON queuebot_dev.queues_list (name ASC) VISIBLE;
 
 
 -- -----------------------------------------------------
--- Table queue_db.queue
+-- Table queuebot_dev.queue
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.queue (
+CREATE TABLE IF NOT EXISTS queuebot_dev.queue (
   subject_id BIGINT UNSIGNED NOT NULL,
   queue_id BIGINT UNSIGNED NOT NULL,
   user_id BIGINT UNSIGNED NOT NULL,
@@ -161,35 +161,35 @@ CREATE TABLE IF NOT EXISTS queue_db.queue (
   PRIMARY KEY (subject_id, queue_id, user_id),
   CONSTRAINT fk_queue_users1
     FOREIGN KEY (user_id)
-    REFERENCES queue_db.users (tg_user_id)
+    REFERENCES queuebot_dev.users (tg_user_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT fk_queue_queues_list1
     FOREIGN KEY (queue_id , subject_id)
-    REFERENCES queue_db.queues_list (queue_id , subject_id)
+    REFERENCES queuebot_dev.queues_list (queue_id , subject_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
   CONSTRAINT fk_queue_subjects1
     FOREIGN KEY (subject_id)
-    REFERENCES queue_db.subjects (subject_id)
+    REFERENCES queuebot_dev.subjects (subject_id)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-CREATE INDEX fk_queue_queues_list1_idx ON queue_db.queue (queue_id ASC, subject_id ASC) VISIBLE;
+CREATE INDEX fk_queue_queues_list1_idx ON queuebot_dev.queue (queue_id ASC, subject_id ASC) VISIBLE;
 
-USE queue_db ;
-
--- -----------------------------------------------------
--- Placeholder table for view queue_db.view1
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS queue_db.view1 (id INT);
+USE queuebot_dev ;
 
 -- -----------------------------------------------------
--- View queue_db.view1
+-- Placeholder table for view queuebot_dev.view1
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS queue_db.view1;
-USE queue_db;
+CREATE TABLE IF NOT EXISTS queuebot_dev.view1 (id INT);
+
+-- -----------------------------------------------------
+-- View queuebot_dev.view1
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS queuebot_dev.view1;
+USE queuebot_dev;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
