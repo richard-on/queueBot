@@ -29,6 +29,9 @@ func NewQueueDB(db *sql.DB) QueueDB {
 
 func (q *QueueDB) GetUser(id int64) (*model.User, error) {
 	res, err := q.db.Query(`SELECT * FROM users where tg_user_id = ?;`, id)
+	if err != nil {
+		return nil, err
+	}
 
 	var user model.User
 	var subgroupID sql.NullInt64
