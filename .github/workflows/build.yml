@@ -27,4 +27,5 @@ jobs:
         run: docker-compose up -d
 
       - name: Healthcheck
-        run: sh "bash ./.github/scripts/healthcheck.sh bot 30"
+        run: ./.github/scripts/healthcheck.sh bot 30
+        shell: bash
