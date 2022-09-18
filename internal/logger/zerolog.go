@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-const logDir = "./logs"
-const logFile = "./logs/queueBot.log"
+//const logDir = "./logs"
+//const logFile = "./logs/queueBot.log"
 
 type Logger struct {
 	log zerolog.Logger

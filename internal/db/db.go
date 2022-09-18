@@ -78,7 +78,7 @@ func (q *QueueDB) GetUser(id int64) (*model.User, error) {
 		return &model.User{}, ErrNoUserInfo
 	}
 
-	q.log.Dedugf("got user @%v, id: %v, isRegistered: ", user.TgUsername, user.UserID, user.IsRegistered)
+	q.log.Dedugf("got user @%v, id: %v, isRegistered: %v", user.TgUsername, user.UserID, user.IsRegistered)
 
 	return &user, nil
 }
@@ -210,7 +210,7 @@ func (q *QueueDB) JoinQueue(user *model.User, queue *Queue) error {
 			}
 		}
 
-		if position.Valid == false {
+		if !position.Valid {
 			_, err = q.db.Exec("INSERT INTO queue(subject_id, queue_id, user_id, position) VALUES (?, ?, ?, ?)",
 				queue.SubjectId, queue.ID, user.UserID, 1)
 		} else {
@@ -236,6 +236,9 @@ func (q *QueueDB) LeaveQueue(user *model.User, queue *Queue) error {
 	if res.Next() {
 		var queuePos int64
 		err = res.Scan(&queuePos)
+		if err != nil {
+			return err
+		}
 
 		_, err = q.db.Exec(`UPDATE queue SET position = position - 1 WHERE queue_id = ? AND position > ?;`,
 			queue.ID, queuePos)

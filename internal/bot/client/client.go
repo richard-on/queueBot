@@ -74,7 +74,7 @@ func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) 
 }
 
 func (c *Client) CheckTimeout() bool {
-	if time.Now().Sub(c.LastConn) > time.Minute*1 {
+	if time.Since(c.LastConn) > time.Minute*1 {
 		c.IsActive = false
 		c.State = Initial
 
