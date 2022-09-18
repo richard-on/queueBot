@@ -26,8 +26,6 @@ jobs:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: docker-compose up -d
 
-      - name: Check http status code of production site
-        uses: lakuapik/gh-actions-http-status@v1
-        with:
-          sites: '["localhost/queueBot/healthcheck"]'
-          expected: '[404, 200]'
+      - name: Healthcheck
+        run: ./.github/scripts/healthcheck.sh bot 30
+        shell: bash
