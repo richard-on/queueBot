@@ -2,15 +2,25 @@ package bot
 
 import (
 	"database/sql"
+	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/richard-on/QueueBot/config"
 	"github.com/richard-on/QueueBot/internal/bot/client"
 	"github.com/richard-on/QueueBot/internal/logger"
 	"github.com/rs/zerolog"
+	"net/http"
+	"os"
+	"time"
 )
 
+func healthcheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "QueueBot is up and running!")
+}
+
 func Run() {
-	log := logger.NewLogger(zerolog.TraceLevel, "queueBot-bot")
+	log := logger.NewLogger(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC1123},
+		zerolog.TraceLevel,
+		"queueBot-bot")
 
 	bot, err := tgbotapi.NewBotAPI(config.TgToken)
 	if err != nil {
@@ -33,17 +43,23 @@ func Run() {
 		}
 	}(database)
 
+	http.HandleFunc("/queue-bot/healthcheck", healthcheck)
+	err = http.ListenAndServe(":80", nil)
+	if err != nil {
+		log.Fatal(err, "cannot establish healthcheck")
+	}
+
 	connectedUsers := make(map[int64]*client.Client, 5)
 	var msg tgbotapi.MessageConfig
 
 	updates := bot.GetUpdatesChan(upd)
 	for update := range updates {
 		if update.Message == nil {
-			go func() {
-				for _, connected := range connectedUsers {
-					connected.CheckTimeout()
+			for _, connected := range connectedUsers {
+				if connected.CheckTimeout() {
+					delete(connectedUsers, connected.User.UserID)
 				}
-			}()
+			}
 
 			continue
 		}
@@ -58,7 +74,7 @@ func Run() {
 		}
 
 		if !c.User.IsRegistered {
-			msg.Text = "Неполная информация о пользователе"
+			msg.Text = client.NeedMoreInfo
 			msg.ChatID = c.User.ChatID
 			if _, err = bot.Send(msg); err != nil {
 				log.Fatal(err, "failed to send message")

@@ -1,24 +1,13 @@
 version: "3.9"
 
 services:
-  db:
-    container_name: "db"
-    image: mysql:latest
-    restart: always
-    ports:
-      - "3307:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD
-
   bot:
     container_name: "bot"
-    depends_on:
-      - db
     build:
       context: .
       dockerfile: Dockerfile
-    image: queuebot
-    restart: on-failure
+    image: richardhere/queue-bot
+    restart: unless-stopped
     environment:
       - TOKEN
       - HOST
@@ -26,7 +15,7 @@ services:
       - USER
       - PASSWORD
       - DBNAME
-      - ADMIN_PASSWORD
+      - SENTRY_DSN
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2

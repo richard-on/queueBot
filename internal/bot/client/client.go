@@ -22,12 +22,12 @@ const (
 
 type Client struct {
 	User     *model.User
+	Db       db.QueueDB
 	Group    *db.Group
 	Subject  []db.Subject
 	Queue    []db.Queue
 	CurQueue db.Queue
 	State    BotState
-	Db       db.QueueDB
 	IsActive bool
 	LastConn time.Time
 }
@@ -73,11 +73,15 @@ func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) 
 	return &client, nil
 }
 
-func (c *Client) CheckTimeout() {
+func (c *Client) CheckTimeout() bool {
 	if time.Now().Sub(c.LastConn) > time.Minute*1 {
 		c.IsActive = false
 		c.State = Initial
+
+		return true
 	}
+
+	return false
 }
 
 func (c *Client) HandleState(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
@@ -137,22 +141,17 @@ func (c *Client) HandleCommand(msg tgbotapi.MessageConfig) (tgbotapi.MessageConf
 		}
 		msg = tgbotapi.NewMessage(c.User.ChatID, greet)
 
-		groupName, err := c.Db.GetGroupName(c.User)
-		if err != nil {
-			return tgbotapi.MessageConfig{}, err
-		}
-
-		subGroupName, err := c.Db.GetSubGroupName(c.User)
-		if err != nil {
-			return tgbotapi.MessageConfig{}, err
-		}
-
-		msg.ReplyMarkup = internal.CreateGroupReplyKeyboard(groupName, subGroupName)
+		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("/start"),
+				tgbotapi.NewKeyboardButton("/groups"),
+			),
+		)
 		c.State = GroupSelect
 
 	case "/groups":
 		if c.User.GroupID == 0 && c.User.SubgroupID == 0 {
-			msg = tgbotapi.NewMessage(c.User.ChatID, "Недостаточно информации")
+			msg = tgbotapi.NewMessage(c.User.ChatID, NeedMoreInfo)
 			c.State = Initial
 		}
 

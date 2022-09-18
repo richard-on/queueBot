@@ -28,7 +28,7 @@ func (c *Client) handleGroupSelect(msg tgbotapi.MessageConfig) ([]db.Subject, tg
 		group = groupName
 
 	} else if msg.Text == subGroupName {
-		subjects, err = c.Db.GetSubjectList(c.User.SubgroupID)
+		subjects, err = c.Db.GetSubgroupSubjectList(c.User.SubgroupID)
 		if err != nil {
 			return nil, tgbotapi.MessageConfig{}, err
 		}
@@ -79,7 +79,7 @@ func (c *Client) handleQueueSelect(queues []db.Queue, msg tgbotapi.MessageConfig
 		}
 	}
 
-	return db.Queue{}, msg, errors.New("no such queue")
+	return db.Queue{}, msg, errors.New(NoQueues)
 }
 
 func (c *Client) handleActionSelect(queue db.Queue, msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {
@@ -113,7 +113,6 @@ func (c *Client) handleActionSelect(queue db.Queue, msg tgbotapi.MessageConfig) 
 		msg.ReplyMarkup = tgbotapi.NewReplyKeyboard(
 			tgbotapi.NewKeyboardButtonRow(
 				tgbotapi.NewKeyboardButton("/groups"),
-				tgbotapi.NewKeyboardButton("/back"),
 			),
 		)
 	}

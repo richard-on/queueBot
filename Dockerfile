@@ -4,11 +4,14 @@ WORKDIR /app
 COPY go.* ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o bot ./cmd
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o queueBot ./cmd/queueBot
 
 FROM alpine:3.15.4
+
+MAINTAINER Richard Ragusski <me@richardhere.dev>
+
 WORKDIR /app
-COPY --from=builder /app/bot /app/bot
+COPY --from=builder /app/queueBot /app/queueBot
 COPY --from=builder /app/.env /app/.env
 
-CMD ["sh", "-c", "/app/bot"]
+CMD ["sh", "-c", "/app/queueBot"]

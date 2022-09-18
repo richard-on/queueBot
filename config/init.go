@@ -6,7 +6,7 @@ import (
 )
 
 func Init() {
-	TgToken = os.Getenv("TOKEN")
+	TgToken = os.Getenv("TOKENDEV")
 	SentryDsn = os.Getenv("SENTRY_DSN")
 	Host = os.Getenv("HOST")
 	Port = os.Getenv("PORT")
