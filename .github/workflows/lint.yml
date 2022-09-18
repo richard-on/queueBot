@@ -1,4 +1,4 @@
-name: CI
+name: Lint
 
 on: [push]
 
@@ -19,26 +19,3 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.18
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Build
-        env:
-          TOKENDEV: ${{ secrets.TOKENDEV }}
-          HOST: ${{ secrets.HOST }}
-          PORT: ${{ secrets.PORT }}
-          USER: ${{ secrets.USER }}
-          PASSWORD: ${{ secrets.PASSWORD }}
-          DBNAME: ${{ secrets.DBNAME }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-        run: docker-compose up

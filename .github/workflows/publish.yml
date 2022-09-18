@@ -5,7 +5,7 @@ on:
     branches:
       - "test"
     workflows:
-      - "CI"
+      - "Build"
     types:
       - completed
 
