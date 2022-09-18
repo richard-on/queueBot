@@ -25,7 +25,3 @@ jobs:
           DBNAME: ${{ secrets.DBNAME }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: docker-compose up -d
-
-      - name: Healthcheck
-        run: ./.github/scripts/healthcheck.sh bot 360
-        shell: bash
