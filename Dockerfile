@@ -12,6 +12,5 @@ MAINTAINER Richard Ragusski <me@richardhere.dev>
 
 WORKDIR /app
 COPY --from=builder /app/queueBot /app/queueBot
-COPY --from=builder /app/.env /app/.env
 
 CMD ["sh", "-c", "/app/queueBot"]
