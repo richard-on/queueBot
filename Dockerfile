@@ -13,4 +13,6 @@ MAINTAINER Richard Ragusski <me@richardhere.dev>
 WORKDIR /app
 COPY --from=builder /app/queueBot /app/queueBot
 
+EXPOSE 80
+
 CMD ["sh", "-c", "/app/queueBot"]

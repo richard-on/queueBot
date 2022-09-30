@@ -1,4 +1,4 @@
-module github.com/richard-on/QueueBot
+module github.com/richard-on/queueBot
 
 go 1.18
 

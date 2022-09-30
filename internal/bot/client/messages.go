@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"github.com/richard-on/QueueBot/internal/bot/model"
+	"github.com/richard-on/queueBot/internal/bot/model"
 )
 
 var greeting = `Привет! Это бот для ведения очередей на сдачу лаб.

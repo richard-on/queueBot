@@ -3,8 +3,8 @@ package client
 import (
 	"errors"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/richard-on/QueueBot/internal"
-	"github.com/richard-on/QueueBot/internal/db"
+	"github.com/richard-on/queueBot/internal"
+	"github.com/richard-on/queueBot/internal/db"
 )
 
 func (c *Client) handleGroupSelect(msg tgbotapi.MessageConfig) ([]db.Subject, tgbotapi.MessageConfig, error) {

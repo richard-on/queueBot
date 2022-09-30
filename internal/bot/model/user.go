@@ -12,3 +12,9 @@ type User struct {
 	LastName     string
 	IsRegistered bool
 }
+
+type Group struct {
+	ID         int64
+	Name       string
+	IsSubgroup bool
+}

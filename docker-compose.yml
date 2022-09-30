@@ -6,10 +6,23 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.logs/json.keys_under_root: true
+      co.elastic.logs/json.overwrite_keys: true
+      co.elastic.logs/json.add_error_key: true
+      co.elastic.logs/json.expand_keys: true
     image: richardhere/queue-bot
+    healthcheck:
+      test: [ "CMD", "curl", "-s", "-f", "http://localhost:80/queue-bot/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
+    ports:
+      - "80:80"
     environment:
-      - TOKEN
+      - TOKENDEV
       - HOST
       - PORT
       - USER
@@ -17,45 +30,44 @@ services:
       - DBNAME
       - SENTRY_DSN
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+  filebeat:
+    labels:
+      co.elastic.logs/enabled: false
+    user: root
+    image: docker.elastic.co/beats/filebeat:7.14.0
+    command: filebeat -e -strict.perms=false
     volumes:
-      - ./resources/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - ./resources/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  elasticsearch:
+    labels:
+      co.elastic.logs/enabled: false
+    environment:
+      - discovery.type=single-node
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
     healthcheck:
       test: [ "CMD", "curl", "-s", "-f", "http://localhost:9200/_cat/health" ]
       interval: 3s
       timeout: 3s
-      retries: 10
+      retries: 80
     ports:
-      - 9200:9200
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:7.6.2
-    volumes:
-      - ./resources/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:6.5.1
-    command: filebeat -e -strict.perms=false
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    volumes:
-      - ./resources/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - ./logs/:/logs/
+      - "9200:9200"
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.6.2
+    labels:
+      co.elastic.logs/enabled: false
+    image: docker.elastic.co/kibana/kibana:7.14.0
     depends_on:
       elasticsearch:
+        condition: service_healthy
+      bot:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "curl", "-s", "-f", "http://localhost:5601/api/status" ]
       interval: 3s
       timeout: 3s
-      retries: 50
+      retries: 80
     ports:
-      - 5601:5601
+      - "5601:5601"

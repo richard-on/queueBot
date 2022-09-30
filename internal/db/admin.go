@@ -3,7 +3,7 @@ package db
 /*import (
 	"database/sql"
 	"errors"
-	"github.com/richard-on/QueueBot/internal"
+	"github.com/richard-on/queueBot/internal"
 )
 
 /*func CheckAdmin(ID int64, username string) bool {

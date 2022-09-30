@@ -3,9 +3,9 @@ package client
 import (
 	"database/sql"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/richard-on/QueueBot/internal"
-	"github.com/richard-on/QueueBot/internal/bot/model"
-	"github.com/richard-on/QueueBot/internal/db"
+	"github.com/richard-on/queueBot/internal"
+	"github.com/richard-on/queueBot/internal/bot/model"
+	"github.com/richard-on/queueBot/internal/db"
 	"time"
 )
 
@@ -23,7 +23,7 @@ const (
 type Client struct {
 	User     *model.User
 	Db       db.QueueDB
-	Group    *db.Group
+	Group    *model.Group
 	Subject  []db.Subject
 	Queue    []db.Queue
 	CurQueue db.Queue
@@ -51,6 +51,7 @@ func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) 
 		if err == db.ErrNoUserInfo {
 			err = client.Db.AddUser(client.User)
 			if err != nil {
+				client.LastConn = time.Now()
 				return &client, err
 			}
 		}
@@ -61,6 +62,7 @@ func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) 
 
 		return &client, err
 	} else if err != nil {
+		client.LastConn = time.Now()
 		return &client, err
 	}
 
@@ -71,17 +73,6 @@ func NewClient(update tgbotapi.Update, tgUser *tgbotapi.User, database *sql.DB) 
 	client.LastConn = time.Now()
 
 	return &client, nil
-}
-
-func (c *Client) CheckTimeout() bool {
-	if time.Since(c.LastConn) > time.Minute*1 {
-		c.IsActive = false
-		c.State = Initial
-
-		return true
-	}
-
-	return false
 }
 
 func (c *Client) HandleState(msg tgbotapi.MessageConfig) (tgbotapi.MessageConfig, error) {

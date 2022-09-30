@@ -2,12 +2,6 @@ package db
 
 import "database/sql"
 
-type Group struct {
-	ID         int64
-	Name       string
-	IsSubgroup bool
-}
-
 type Subject struct {
 	ID                int64
 	GroupID           int64
