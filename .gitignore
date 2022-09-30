@@ -1,5 +1,13 @@
 ### Go ###
 
+# Log files and directrories
+/logs/
+*.log
+
+# SQL create files
+queuebot_db.sql
+test_queue_db.sql
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
